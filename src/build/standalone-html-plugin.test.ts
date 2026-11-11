@@ -3,10 +3,10 @@ import type {OutputBundle} from "rollup";
 import {inlineStandaloneHtml} from "./standalone-html-plugin";
 
 function bundle():OutputBundle{
-  return {
+  return ({
     "assets/app.js":{type:"chunk",fileName:"assets/app.js",name:"app",isEntry:true,isImplicitEntry:false,moduleIds:[],facadeModuleId:"/src/main.tsx",isDynamicEntry:false,imports:[],dynamicImports:[],implicitlyLoadedBefore:[],referencedFiles:[],exports:[],modules:{},code:"const ready = true;",map:null},
     "assets/app.css":{type:"asset",fileName:"assets/app.css",name:"app.css",source:"body { color: white; }"}
-  };
+  }) as unknown as OutputBundle;
 }
 
 describe("standalone HTML build",()=>{
