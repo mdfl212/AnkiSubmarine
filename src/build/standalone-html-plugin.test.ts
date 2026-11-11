@@ -31,4 +31,9 @@ describe("standalone HTML build",()=>{
   it("fails rather than emitting HTML with unresolved asset references",()=>{
     expect(()=>inlineStandaloneHtml('<script type="module" src="./assets/missing.js"></script>',{})).toThrow(/could not find JavaScript chunk/);
   });
+
+  it("rejects remote scripts, stylesheets, and CSS imports",()=>{
+    expect(()=>inlineStandaloneHtml('<script src="https://cdn.example/app.js"></script>',{})).toThrow(/external network resources/);
+    expect(()=>inlineStandaloneHtml('<style>@import url(https://fonts.example/font.css);</style>',{})).toThrow(/external network resources/);
+  });
 });
