@@ -11,8 +11,14 @@ AnkiSubmarine is an independent, fully offline-capable, browser-based applicatio
 
 The application now has a local APKG selection/drop workflow, ZIP preflight checks, package collection-entry detection, legacy JSON and modern protobuf media-manifest readers, Zstandard decoding for modern collection databases, SQLite Wasm collection inspection, and an import summary.
 
-The initial inspector passes CI type-checking, 11 unit tests (including SQLite inventory tests for normalized and legacy JSON schemas), and a production build. CI also checks for high/critical production dependency vulnerabilities. This is not yet a complete APKG compatibility claim. ZIP64 and encrypted archives are not supported. The first build applies a 350 MB uploaded-file limit and 750 MB declared expanded-archive limit. Real package fixtures from supported Anki releases and end-to-end validation are still required before claiming format compatibility.
+The initial inspector passes CI type-checking, automated unit tests, and a production build. Tests cover normalized and legacy JSON collection schemas, collection-entry precedence, and legacy media-manifest decoding. CI also checks for high/critical production dependency vulnerabilities. This is not yet a complete APKG compatibility claim. ZIP64 and encrypted archives are not supported. The first build applies a 350 MB uploaded-file limit and 750 MB declared expanded-archive limit. A real 52.6 MB Dermatology package has now been independently inspected: it contains collection.anki21 as its main database and collection.anki2 as a compatibility stub, with schema version 11, 263 notes, 318 cards, 6 decks, 1 note type, 591 distinct tags, and 286 media files. The ZIP, SQLite database, and legacy JSON media manifest are structurally valid. The remaining gate is to run this exact fixture through the browser worker and compare the displayed inventory before claiming end-to-end compatibility.
 
+## Offline-first operation
+- All deck processing is local. There is no backend, cloud processing, or external AI/API dependency.
+- The production build includes a service worker that caches the app shell and emitted assets for offline reopening in the same browser profile and origin.
+- A hosted app must be opened once while online so the browser can cache the application. After that, reopen it offline. Browser storage clearing or changing the site origin can remove the cache.
+- For a truly disconnected first launch, distribute the built application assets locally and serve them from localhost; do not open the HTML file directly with file://, because service workers require localhost or HTTPS.
+- Imported APKG files and their contents remain on the device.
 ## Development
 Requirements: Node.js 22.12+ and npm.
 
