@@ -1,4 +1,5 @@
-import type {OutputBundle,Plugin} from "vite";
+import type {OutputBundle} from "rollup";
+import type {Plugin} from "vite";
 
 function assetPath(source:string):string{
   return decodeURIComponent(source.split("?")[0]!).replace(/^\.\//,"").replace(/^\/+/, "");
