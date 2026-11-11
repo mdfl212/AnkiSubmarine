@@ -2,7 +2,7 @@
 
 **Anki Deck Analyzer, Intelligent Organizer & Subdeck Builder**
 
-AnkiSubmarine is an independent, browser-first application that inspects existing Anki .apkg packages, analyzes their actual learning content, proposes a meaningful hierarchical deck structure, and exports a validated reorganized package.
+AnkiSubmarine is an independent, fully offline-capable, browser-based application that inspects existing Anki .apkg packages, analyzes their actual learning content, proposes a meaningful hierarchical deck structure, and exports a validated reorganized package. The application processes study data locally and has no cloud-processing or backend dependency.
 
 **Workflow:** Import → Inspect → Analyze → Organize → Review → Validate → Export
 
@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-Quality checks: `npm run typecheck`, `npm test`, and `npm run build`.
+Quality checks: `npm run typecheck`, `npm test`, and `npm run build`. The production build emits `sw.js` with a precache manifest for the built app shell and assets.
 
 ## Phase 2 import behavior
 - Processing is local in a dedicated Web Worker.
