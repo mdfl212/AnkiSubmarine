@@ -42,7 +42,7 @@ export function inspectCollectionDatabase(db:any,input:CollectionInspectionInput
   }
   const tagSet=new Set<string>(),noteColumns=tableRows(db,'PRAGMA table_info("notes")').map(row=>String(row.name));
   if(noteColumns.includes("tags"))db.exec({sql:"SELECT tags FROM notes",rowMode:"object",callback:(row:any)=>{
-    if(typeof row.tags==="string")for(const tag of row.tags.trim().split(/\\s+/))if(tag)tagSet.add(tag);
+    if(typeof row.tags==="string")for(const tag of row.tags.trim().split(/\s+/))if(tag)tagSet.add(tag);
   }});
   const schemaVersion=tables.has("col")&&tableRows(db,'PRAGMA table_info("col")').some(row=>row.name==="ver")
     ?Number(tableRows(db,"SELECT ver FROM col LIMIT 1")[0]?.ver??0):null;
