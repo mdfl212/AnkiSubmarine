@@ -3,12 +3,15 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./styles.css";
 
-if (import.meta.env.PROD && "serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    void navigator.serviceWorker.register("/sw.js").catch(error => {
-      console.error("AnkiSubmarine offline support could not be registered.", error);
+const serviceWorkerOriginSupported=window.location.protocol==="https:"||
+  (window.location.protocol==="http:"&&(window.location.hostname==="localhost"||window.location.hostname==="127.0.0.1"));
+
+if(import.meta.env.PROD&&serviceWorkerOriginSupported&&"serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    void navigator.serviceWorker.register("./sw.js").catch(error=>{
+      console.error("AnkiSubmarine optional browser cache could not be registered.",error);
     });
-  }, {once:true});
+  },{once:true});
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
