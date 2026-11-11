@@ -14,6 +14,9 @@ function sourceText(source:string|Uint8Array):string{
  * in index.html. This makes the production entry point usable from file://.
  */
 export function inlineStandaloneHtml(html:string,bundle:OutputBundle):string{
+  if(/<(?:script|link)\b[^>]*(?:src|href)=["'](?:https?:)?\/\//i.test(html)||/@import\s+(?:url\()?["']?https?:\/\//i.test(html)||/url\(["']?https?:\/\//i.test(html)){
+    throw new Error("Standalone HTML must not load external network resources.");
+  }
   let output=html.replace(/<link\b(?=[^>]*\brel=["']modulepreload["'])[^>]*>/gi,"");
 
   output=output.replace(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>\s*<\/script>/gi,(_tag,path:string)=>{
