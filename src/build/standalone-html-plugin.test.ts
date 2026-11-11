@@ -35,5 +35,9 @@ describe("standalone HTML build",()=>{
   it("rejects remote scripts, stylesheets, and CSS imports",()=>{
     expect(()=>inlineStandaloneHtml('<script src="https://cdn.example/app.js"></script>',{})).toThrow(/external network resources/);
     expect(()=>inlineStandaloneHtml('<style>@import url(https://fonts.example/font.css);</style>',{})).toThrow(/external network resources/);
+    const assets=bundle();
+    const css=assets["assets/app.css"];
+    if(css?.type==="asset")css.source="body { background: url(https://cdn.example/image.png); }";
+    expect(()=>inlineStandaloneHtml('<link rel="stylesheet" href="./assets/app.css">',assets)).toThrow(/Standalone CSS must not load external network resources/);
   });
 });
