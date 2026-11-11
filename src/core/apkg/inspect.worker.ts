@@ -28,10 +28,10 @@ function parseLegacyJson(value:unknown):Record<string,any>{
 async function inspectDatabase(databaseBytes:Uint8Array,format:PackageFormat,filename:string,fileSize:number,entryCount:number,mediaCount:number,mediaManifestCount:number|null,warnings:string[]):Promise<ApkgInspectionSummary>{
   if(!isSqlite(databaseBytes))throw new Error("The selected collection entry did not decode to a valid SQLite database.");
   progress("Opening the collection database",72);
-  const sqlite3=await sqlite3InitModule({print:()=>{},printErr:()=>{}});
+  const sqlite3=await sqlite3InitModule();
   const pointer=sqlite3.wasm.allocFromTypedArray(databaseBytes),db=new sqlite3.oo1.DB();
   try{
-    const rc=sqlite3.capi.sqlite3_deserialize(db.pointer,"main",pointer,databaseBytes.byteLength,databaseBytes.byteLength,sqlite3.capi.SQLITE_DESERIALIZE_FREEONCLOSE);
+    const rc=sqlite3.capi.sqlite3_deserialize(db.pointer!,"main",pointer,databaseBytes.byteLength,databaseBytes.byteLength,sqlite3.capi.SQLITE_DESERIALIZE_FREEONCLOSE);
     db.checkRc(rc);db.exec("PRAGMA query_only=ON;");
     const tableNames=tableRows(db,"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").map(row=>String(row.name));
     const tables=new Set(tableNames);
