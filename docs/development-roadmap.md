@@ -19,8 +19,8 @@
 - [x] Report card/note/deck/note-type/tag/media counts, schema details, tables, and quick_check status where available.
 - [x] Verify TypeScript checks, automated tests, and production build in GitHub Actions.
 - [x] Add synthetic SQLite inventory tests for normalized and legacy JSON collection schemas.
-- [x] Add a CI audit gate for high/critical production dependency vulnerabilities.
-- [ ] Test real .anki2, .anki21, and .anki21b APKG fixtures from supported Anki versions.
+- [x] Add a CI audit gate for high/critical production dependency vulnerabilities.\n- [x] Generate a production service worker that pre-caches the app shell and emitted assets for offline reopening.\n- [x] Register offline support only in production builds and test precache/navigation fallback behavior.\n- [x] Document the first-load requirement, same-origin behavior, and browser storage limitations.
+- [ ] Verify the production build can be loaded once online, then reopened with the network disabled in a supported browser.\n- [ ] Test real .anki2, .anki21, and .anki21b APKG fixtures from supported Anki versions.
 - [ ] Benchmark large archives and revise memory limits/streaming behavior.
 - [ ] Verify media-index consistency and inspect real schema variants.
 
