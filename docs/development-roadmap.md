@@ -9,7 +9,7 @@
 - [ ] Confirm build, type-check, tests, and responsive rendering in the user's environment.
 
 ## Phase 2 — APKG import engine
-**Status:** Initial implementation committed; TypeScript checks, 11 unit tests, production build, and high/critical production dependency audit pass in CI. Real-fixture verification remains pending.
+**Status:** Import foundation implemented. CI passes. A real 52.6 MB Dermatology APKG has been inspected directly at ZIP, SQLite, and media-manifest level; browser-worker end-to-end validation remains pending.
 - [x] Add local .apkg file selection and drag-and-drop.
 - [x] Add ZIP central-directory preflight, archive path checks, encryption and compression checks, and resource limits.
 - [x] Detect collection entry formats, preferring collection.anki21b over compatibility copies.
@@ -19,8 +19,12 @@
 - [x] Report card/note/deck/note-type/tag/media counts, schema details, tables, and quick_check status where available.
 - [x] Verify TypeScript checks, automated tests, and production build in GitHub Actions.
 - [x] Add synthetic SQLite inventory tests for normalized and legacy JSON collection schemas.
-- [x] Add a CI audit gate for high/critical production dependency vulnerabilities.\n- [x] Generate a production service worker that pre-caches the app shell and emitted assets for offline reopening.\n- [x] Register offline support only in production builds and test precache/navigation fallback behavior.\n- [x] Document the first-load requirement, same-origin behavior, and browser storage limitations.
-- [ ] Verify the production build can be loaded once online, then reopened with the network disabled in a supported browser.\n- [ ] Test real .anki2, .anki21, and .anki21b APKG fixtures from supported Anki versions.
+- [x] Add a CI audit gate for high/critical production dependency vulnerabilities.
+- [x] Add regression tests for collection-entry precedence, including `.anki21` plus `.anki2` compatibility-stub packages.
+- [x] Add regression tests for legacy numeric-key JSON media manifests.
+- [x] Inspect a real Dermatology `.apkg`: `.anki21` main collection, `.anki2` compatibility stub, schema version 11, legacy JSON media map, 263 notes, 318 cards, 6 decks, 1 note type, 591 distinct tags, and 286 media files.\n- [x] Generate a production service worker that pre-caches the app shell and emitted assets for offline reopening.\n- [x] Register offline support only in production builds and test precache/navigation fallback behavior.\n- [x] Document the first-load requirement, same-origin behavior, and browser storage limitations.
+- [ ] Verify the production build can be loaded once online, then reopened with the network disabled in a supported browser.\n- [ ] Run the uploaded real `.anki21` Dermatology fixture through the browser importer and compare its displayed inventory with the independently verified package inventory.
+- [ ] Test real `.anki2` and `.anki21b` APKG fixtures from supported Anki versions.
 - [ ] Benchmark large archives and revise memory limits/streaming behavior.
 - [ ] Verify media-index consistency and inspect real schema variants.
 
