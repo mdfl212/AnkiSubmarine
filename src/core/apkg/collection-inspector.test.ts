@@ -44,7 +44,7 @@ describe("SQLite collection inspection",()=>{
     try{
       const summary=inspectCollectionDatabase(db,{format:"legacy-1",filename:"legacy.apkg",fileSize:456,entryCount:3,mediaCount:0,mediaManifestCount:0,warnings:[]});
       expect(summary.noteCount).toBe(1);expect(summary.cardCount).toBe(1);
-      expect(summary.deckCount).toBe(2);expect(summary.noteTypeCount).toBe(2);expect(summary.tagCount).toBe(1);
+      expect(summary.deckCount).toBe(2);expect(summary.noteTypeCount).toBe(2);expect(summary.tagCount).toBe(2);
       expect(summary.schemaVersion).toBe(11);expect(summary.integrity).toBe("ok");
     }finally{db.close();}
   });
