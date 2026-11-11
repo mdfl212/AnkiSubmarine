@@ -1,57 +1,40 @@
 # APKG Format Research Notes
 
-## Purpose
-This document defines Phase 2 research and compatibility gates. It is not a complete APKG specification and does not imply current parser support.
+## Package layout
+An .apkg is a ZIP package. Current Anki exports can carry collection data in one of three entries:
+- collection.anki2 — legacy schema, uncompressed SQLite.
+- collection.anki21 — intermediate schema, uncompressed SQLite.
+- collection.anki21b — latest schema, Zstandard-compressed SQLite.
 
-## Known package characteristics
-Anki documents .apkg as a packaged deck containing cards, notes, note types, and bundled media. Anki distinguishes deck packages from collection packages and documents a legacy-compatible export option.
+A modern package may also include collection.anki2 as a compatibility placeholder. The importer must choose the newest real collection entry in this order: anki21b, anki21, anki2. Selecting anki2 merely because it exists can silently return a one-card upgrade warning placeholder instead of the collection.
 
-Collection database entry names to investigate include:
-- collection.anki2
-- collection.anki21
-- collection.anki21b
+Older media manifests are JSON maps from numeric ZIP entry names to original filenames. The latest format uses a Zstandard-compressed Protocol Buffers MediaEntries message. The modern package meta entry is also protobuf, with field 1 carrying the package version.
 
-Treat anki21b as a distinct compressed format until its encoding and metadata are verified against Anki's implementation and real fixtures. Verify the Zstandard framing and version signaling; do not infer them from the filename alone.
+Sources:
+- [Anki Manual — Exporting](https://docs.ankiweb.net/exporting.html)
+- [Anki source repository](https://github.com/ankitects/anki)
+- [Anki package layout technical notes](https://docolin.com/de/imgajeed/ankipack/explanation/apkg-format)
+- [SQLite Wasm documentation](https://sqlite.org/wasm/doc/trunk/index.md)
+- [SQLite Wasm npm/Vite guidance](https://github.com/sqlite/sqlite-wasm)
 
-Media is stored as archive entries with a manifest mapping package entry names to original filenames. Validate the manifest shape and media naming rules against fixtures before implementation.
+## Implemented inspection behavior
+The browser importer currently:
+- checks ZIP end/central-directory records and basic entry metadata;
+- rejects ZIP64, multi-disk, encrypted entries, unsafe paths, duplicate names, unsupported compression methods, suspicious ratios, and entries over configured limits;
+- selects collection.anki21b > collection.anki21 > collection.anki2;
+- decodes modern Zstandard collection data;
+- reads legacy JSON and modern protobuf media indexes;
+- opens SQLite Wasm in memory, query-only;
+- reports table inventory, counts, deck definitions, note types, tags, and quick_check where schema fields are recognized.
 
-## Required inspection order
-1. Validate ZIP structure; reject unsafe paths and unreasonable resource claims.
-2. Enumerate archive entries without eager extraction.
-3. Read package metadata when present.
-4. Identify the collection database entry and compression.
-5. Decode only through a verified format/version adapter.
-6. Open SQLite read-only and inspect schema/version metadata.
-7. Inventory tables, indexes, triggers, and relevant columns.
-8. Build a capability report before enabling edits.
+## Not yet verified
+No real Anki .apkg fixtures have yet been committed or tested. The implementation must not be advertised as fully supporting any package generation until real packages from that generation pass import and inspection tests. ZIP64 is currently unsupported. The latest protobuf schema may evolve and needs verification against current Anki source.
 
-## Compatibility fixture matrix
-Collect real packages from supported Anki releases, with permission to use them as fixtures:
-- Legacy deck package with collection.anki2.
-- Intermediate package with collection.anki21.
-- Modern package with collection.anki21b.
-- No-media package and package with multiple media types.
-- Multiple decks and nested decks.
-- Cloze notes and multiple note types.
-- Scheduling/review data where included.
-- Large package for memory measurements.
-
-Each claimed format must pass import → inventory → working-copy modification → export → re-import, plus an actual Anki import check where feasible.
-
-## Preservation invariants
-Compare before and after:
-- Note/card IDs and counts.
-- GUIDs, note fields, tags, and field order.
-- Note type/model definitions, templates, and styling.
-- Media manifest and referenced media bytes.
-- Scheduling and review-history records when present.
-- Deck definitions and card-to-deck assignments.
-
-Only intended organization changes should differ. Unsupported records/features must be reported before export; silent data loss is a release blocker.
-
-## Sources
-- Anki Manual — Exporting: https://docs.ankiweb.net/exporting.html
-- Anki source repository: https://github.com/ankitects/anki
-- SQLite Wasm documentation: https://sqlite.org/wasm/doc/trunk/index.md
-
-Base format adapters on current Anki source and verified package fixtures, not third-party descriptions alone.
+## Fixture matrix still required
+- Real collection.anki2 package.
+- Real collection.anki21 package with compatibility stub.
+- Real collection.anki21b package with compressed media index and numbered media entries.
+- Multi-deck and nested-deck package.
+- Cloze and multiple note types.
+- Media with images, audio, and fonts.
+- Large collection with scheduling/review data.

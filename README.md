@@ -2,29 +2,42 @@
 
 **Anki Deck Analyzer, Intelligent Organizer & Subdeck Builder**
 
-AnkiSubmarine is an independent, browser-first application intended to inspect existing Anki .apkg packages, analyze their actual learning content, propose a meaningful hierarchical deck structure, and export a validated reorganized package.
+AnkiSubmarine is an independent, browser-first application that inspects existing Anki .apkg packages, analyzes their actual learning content, proposes a meaningful hierarchical deck structure, and exports a validated reorganized package.
 
 **Workflow:** Import → Inspect → Analyze → Organize → Review → Validate → Export
 
 ## Current status
-The project is in **Phase 1 — Repository and architecture**.
+**Phase 2 — APKG import engine (initial implementation).**
 
-The current build is an application shell only. APKG import, card analysis, deck editing, and export are not implemented yet. The interface intentionally does not show fabricated deck statistics or pretend package upload works.
+The application now has a local APKG selection/drop workflow, ZIP preflight checks, package collection-entry detection, legacy JSON and modern protobuf media-manifest readers, Zstandard decoding for modern collection databases, SQLite Wasm collection inspection, and an import summary.
 
-## Principles
-- Analyze actual imported cards; never impose a generic deck tree.
-- Preserve the original package and edit a separate working copy.
-- Assign each card to one primary deck by default.
-- Keep ambiguous classifications in a manual review queue.
-- Process locally by default; never send deck content to an external AI service without explicit consent.
-- Validate exported packages before offering them.
+This is an initial inspector, not yet a complete APKG compatibility claim. ZIP64 and encrypted archives are not supported. The first build applies a 350 MB uploaded-file limit and 750 MB declared expanded-archive limit. Real package fixtures from supported Anki releases and end-to-end validation are still required before claiming format compatibility.
 
 ## Development
 Requirements: Node.js 22.12+ and npm.
 
-Run `npm install`, then `npm run dev`.
+```bash
+npm install
+npm run dev
+```
 
 Quality checks: `npm run typecheck`, `npm test`, and `npm run build`.
+
+## Phase 2 import behavior
+- Processing is local in a dedicated Web Worker.
+- The original File object remains unchanged in the current session.
+- Collection database priority is .anki21b, then .anki21, then .anki2. This avoids mistaking an older-client compatibility placeholder for the actual collection.
+- SQLite is opened in memory and set to query-only mode.
+- The inspector reports notes, cards, deck definitions, note types, tags, schema details, tables, and SQLite quick_check status where available.
+- Warnings are shown for missing or inconsistent metadata.
+
+## Known limitations
+- No ZIP64 or encrypted archive support.
+- Initial archive limits are conservative and require large-deck benchmarking.
+- Modern package protobuf parsing currently covers the package version and media index fields needed for inspection, not all Anki protobuf schemas.
+- Modern Zstandard decompression has not yet been verified against a real APKG fixture in this repository.
+- The importer inventories package media but does not yet expose individual media files for preview.
+- No APKG export or modification is implemented.
 
 ## Documentation
 - [Architecture](docs/architecture.md)

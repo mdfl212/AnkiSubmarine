@@ -1,18 +1,28 @@
 # Development Roadmap
 
 ## Phase 1 — Repository and architecture
-**Status:** Foundation implementation started.
+**Status:** Merged into main.
 - [x] Inspect repository metadata, branches, commit history, and existing files.
 - [x] Record architecture and APKG compatibility strategy.
 - [x] Establish TypeScript/React/Vite application shell.
 - [x] Add a minimal workflow-definition test and CI workflow.
-- [ ] Run dependency installation, type-check, tests, and production build in CI.
-
-Acceptance criteria: shell renders at desktop/mobile widths; build and type-check pass; workflow test passes; architecture and risks are documented; no fake import, analysis, or export behavior is exposed.
+- [ ] Confirm build, type-check, tests, and responsive rendering in the user's environment.
 
 ## Phase 2 — APKG import engine
-ZIP inventory and safety checks; metadata and collection entry detection; version-aware SQLite inspection in a worker; deck/note/card/model/tag/media inventory; import summary and warnings; real fixtures for every claimed format.
-Exit gate: every claimed package format passes real import and inventory tests.
+**Status:** Initial implementation committed; real-fixture verification pending.
+- [x] Add local .apkg file selection and drag-and-drop.
+- [x] Add ZIP central-directory preflight, archive path checks, encryption and compression checks, and resource limits.
+- [x] Detect collection entry formats, preferring collection.anki21b over compatibility copies.
+- [x] Add legacy JSON media-manifest and modern protobuf media-index decoding.
+- [x] Add Zstandard collection decompression path.
+- [x] Add SQLite Wasm read-only inspection in a Web Worker.
+- [x] Report card/note/deck/note-type/tag/media counts, schema details, tables, and quick_check status where available.
+- [ ] Verify browser build and automated tests.
+- [ ] Test real .anki2, .anki21, and .anki21b APKG fixtures from supported Anki versions.
+- [ ] Benchmark large archives and revise memory limits/streaming behavior.
+- [ ] Verify media-index consistency and inspect real schema variants.
+
+Exit gate: each claimed package format passes real import and inventory tests. Do not enable export until the package can be modified on a working copy and re-imported successfully.
 
 ## Phase 3 — Content analysis
 HTML-aware text extraction without source mutation; field/tag/note-type/deck analysis; medical concept detection; confidence levels and explanations; unclassified/manual review queue.
