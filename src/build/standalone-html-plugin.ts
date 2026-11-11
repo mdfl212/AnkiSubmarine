@@ -29,10 +29,14 @@ export function inlineStandaloneHtml(html:string,bundle:OutputBundle):string{
   output=output.replace(/<link\b(?=[^>]*\brel=["']stylesheet["'])[^>]*\bhref=["']([^"']+)["'][^>]*>/gi,(_tag,path:string)=>{
     const item=bundle[assetPath(path)];
     if(!item||item.type!=="asset")throw new Error(`Standalone build could not find stylesheet: ${path}`);
-    return `<style>\n${sourceText(item.source).replace(/<\/style/gi,"<\\/style")}\n</style>`;
+    const css=sourceText(item.source);
+    if(/@import\s+(?:url\()?["']?https?:\/\//i.test(css)||/url\(["']?https?:\/\//i.test(css)){
+      throw new Error("Standalone CSS must not load external network resources.");
+    }
+    return `<style>\n${css.replace(/<\/style/gi,"<\\/style")}\n</style>`;
   });
 
-  if(/<(?:script|link)\b[^>]*(?:src|href)=["'](?:\.\/|\/)?assets\//i.test(output)){
+  if(/<(?:script|link)\b[^>]*(?:src|href)=/i.test(output)){
     throw new Error("Standalone HTML still references an external build asset.");
   }
   return output;
