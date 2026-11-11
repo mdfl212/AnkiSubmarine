@@ -2,6 +2,7 @@ import {unzipSync} from "fflate";
 import {decompress as zstdDecompress} from "fzstd";
 import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 import {readModernMediaManifest,readPackageVersion} from "./protobuf";
+import {inspectCollectionDatabase} from "./collection-inspector";
 import {inspectZipDirectory} from "./zip-preflight";
 import type {ApkgInspectionSummary,DeckSummary,ImportWorkerMessage,ImportWorkerRequest,PackageFormat} from "./types";
 const scope=self as unknown as {onmessage:((event:MessageEvent<ImportWorkerRequest>)=>void)|null;postMessage:(message:ImportWorkerMessage)=>void};
@@ -19,12 +20,6 @@ function decodeMediaManifest(bytes:Uint8Array,latest:boolean){
   if(latest)return readModernMediaManifest(zstdDecompress(bytes)).map(entry=>entry.name);
   return decodeLegacyMedia(bytes);
 }
-function tableRows(db:any,sql:string):any[]{return db.exec({sql,rowMode:"object",returnValue:"resultRows"}) as any[];}
-function countRows(db:any,table:string):number{return Number(tableRows(db,`SELECT COUNT(*) AS count FROM "${table}"`)[0]?.count??0);}
-function parseLegacyJson(value:unknown):Record<string,any>{
-  if(typeof value!=="string")return {};
-  try{const parsed=JSON.parse(value);return parsed&&typeof parsed==="object"?parsed:{};}catch{return {};}
-}
 async function inspectDatabase(databaseBytes:Uint8Array,format:PackageFormat,filename:string,fileSize:number,entryCount:number,mediaCount:number,mediaManifestCount:number|null,warnings:string[]):Promise<ApkgInspectionSummary>{
   if(!isSqlite(databaseBytes))throw new Error("The selected collection entry did not decode to a valid SQLite database.");
   progress("Opening the collection database",72);
@@ -33,45 +28,7 @@ async function inspectDatabase(databaseBytes:Uint8Array,format:PackageFormat,fil
   try{
     const rc=sqlite3.capi.sqlite3_deserialize(db.pointer!,"main",pointer,databaseBytes.byteLength,databaseBytes.byteLength,sqlite3.capi.SQLITE_DESERIALIZE_FREEONCLOSE);
     db.checkRc(rc);db.exec("PRAGMA query_only=ON;");
-    const tableNames=tableRows(db,"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").map(row=>String(row.name));
-    const tables=new Set(tableNames);
-    if(!tables.has("notes")||!tables.has("cards"))throw new Error("The collection database is missing the expected Anki notes or cards table.");
-    const integrityRow=tableRows(db,"PRAGMA quick_check(1)")[0];
-    const integrity=String(integrityRow?.quick_check??Object.values(integrityRow??{})[0]??"")==="ok"?"ok":"failed";
-    if(integrity==="failed")warnings.push("SQLite quick_check reported a database integrity issue.");
-    const noteCount=countRows(db,"notes"),cardCount=countRows(db,"cards");
-    const pragma=tableRows(db,"PRAGMA user_version")[0],sqliteUserVersion=Number(Object.values(pragma??{})[0]??0);
-    let decks:DeckSummary[]=[];
-    if(tables.has("decks")){
-      const columns=tableRows(db,'PRAGMA table_info("decks")').map(row=>String(row.name));
-      if(columns.includes("name"))decks=tableRows(db,"SELECT name FROM decks ORDER BY name").map(row=>({name:String(row.name)}));
-    }
-    let noteTypeCount=0;
-    if(tables.has("notetypes"))noteTypeCount=countRows(db,"notetypes");
-    if(tables.has("col")){
-      const colColumns=tableRows(db,'PRAGMA table_info("col")').map(row=>String(row.name));
-      const legacyFields=["decks","models"].filter(name=>colColumns.includes(name));
-      if(legacyFields.length){
-        const col=tableRows(db,`SELECT ${legacyFields.map(name=>`"${name}"`).join(",")} FROM col LIMIT 1`)[0]??{};
-        if(!decks.length&&typeof col.decks==="string"){
-          const parsed=parseLegacyJson(col.decks);
-          decks=Object.values(parsed).filter(item=>item&&typeof item.name==="string").map(item=>({id:String(item.id??""),name:String(item.name)}));
-        }
-        if(!noteTypeCount&&typeof col.models==="string")noteTypeCount=Object.keys(parseLegacyJson(col.models)).length;
-      }
-    }
-    const tagSet=new Set<string>(),noteColumns=tableRows(db,'PRAGMA table_info("notes")').map(row=>String(row.name));
-    if(noteColumns.includes("tags"))db.exec({sql:"SELECT tags FROM notes",rowMode:"object",callback:(row:any)=>{
-      if(typeof row.tags==="string")for(const tag of row.tags.trim().split(/\s+/))if(tag)tagSet.add(tag);
-    }});
-    const schemaVersion=tables.has("col")&&tableRows(db,'PRAGMA table_info("col")').some(row=>row.name==="ver")
-      ?Number(tableRows(db,"SELECT ver FROM col LIMIT 1")[0]?.ver??0):null;
-    if(!decks.length)warnings.push("Deck definitions could not be read from the detected collection schema.");
-    if(!noteTypeCount)warnings.push("Note type definitions were not found in the expected collection tables.");
-    return {filename,fileSize,packageFormat:format,collectionEntry:format==="latest"?"collection.anki21b":format==="legacy-2"?"collection.anki21":"collection.anki2",
-      schemaVersion:Number.isFinite(schemaVersion)?schemaVersion:null,sqliteUserVersion:Number.isFinite(sqliteUserVersion)?sqliteUserVersion:null,
-      noteCount,cardCount,deckCount:decks.length,noteTypeCount,tagCount:tagSet.size,mediaCount,mediaManifestCount,archiveEntryCount:entryCount,
-      decks,tables:tableNames,integrity,warnings};
+    return inspectCollectionDatabase(db,{format,filename,fileSize,entryCount,mediaCount,mediaManifestCount,warnings});
   }finally{db.close();}
 }
 async function inspectFile(file:File):Promise<ApkgInspectionSummary>{
