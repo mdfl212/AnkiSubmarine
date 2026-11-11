@@ -4,6 +4,8 @@ import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 import {readModernMediaManifest,readPackageVersion} from "./protobuf";
 import {inspectCollectionDatabase} from "./collection-inspector";
 import {inspectZipDirectory} from "./zip-preflight";
+import {selectCollectionEntry} from "./package-format";
+import {decodeLegacyMediaManifest} from "./media-manifest";
 import type {ApkgInspectionSummary,ImportWorkerMessage,ImportWorkerRequest,PackageFormat} from "./types";
 const scope=self as unknown as {onmessage:((event:MessageEvent<ImportWorkerRequest>)=>void)|null;postMessage:(message:ImportWorkerMessage)=>void};
 const MAX_UPLOAD_BYTES=350_000_000;
@@ -11,14 +13,9 @@ const SQLITE_MAGIC="SQLite format 3\0";
 function progress(stage:string,percent:number){scope.postMessage({type:"progress",stage,percent});}
 function decodeUtf8(bytes:Uint8Array){return new TextDecoder().decode(bytes);}
 function isSqlite(bytes:Uint8Array){return bytes.length>=16&&decodeUtf8(bytes.subarray(0,16))===SQLITE_MAGIC;}
-function decodeLegacyMedia(bytes:Uint8Array):string[]{
-  try{const parsed:unknown=JSON.parse(decodeUtf8(bytes));if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))throw new Error();
-    return Object.values(parsed as Record<string,unknown>).filter((value):value is string=>typeof value==="string");
-  }catch{throw new Error("The legacy media manifest is not valid JSON.");}
-}
 function decodeMediaManifest(bytes:Uint8Array,latest:boolean){
   if(latest)return readModernMediaManifest(zstdDecompress(bytes)).map(entry=>entry.name);
-  return decodeLegacyMedia(bytes);
+  return decodeLegacyMediaManifest(bytes);
 }
 async function inspectDatabase(databaseBytes:Uint8Array,format:PackageFormat,filename:string,fileSize:number,entryCount:number,mediaCount:number,mediaManifestCount:number|null,warnings:string[]):Promise<ApkgInspectionSummary>{
   if(!isSqlite(databaseBytes))throw new Error("The selected collection entry did not decode to a valid SQLite database.");
@@ -39,12 +36,10 @@ async function inspectFile(file:File):Promise<ApkgInspectionSummary>{
   const input=new Uint8Array(await file.arrayBuffer());
   progress("Checking ZIP structure and safety",20);
   const directory=inspectZipDirectory(input),names=new Set(directory.map(entry=>entry.name));
-  const collectionEntry=["collection.anki21b","collection.anki21","collection.anki2"].find(name=>names.has(name));
-  if(!collectionEntry)throw new Error("No supported Anki collection database was found. Expected collection.anki21b, collection.anki21, or collection.anki2.");
-  const format:PackageFormat=collectionEntry==="collection.anki21b"?"latest":collectionEntry==="collection.anki21"?"legacy-2":"legacy-1";
-  const warnings:string[]=[];
-  if(names.has("collection.anki21b")&&names.has("collection.anki2"))warnings.push("A legacy collection.anki2 compatibility database is also present. The importer correctly selected collection.anki21b.");
-  else if(names.has("collection.anki21")&&names.has("collection.anki2"))warnings.push("A collection.anki2 compatibility database is also present. The importer correctly selected collection.anki21.");
+  const selection=selectCollectionEntry(names);
+  if(!selection)throw new Error("No supported Anki collection database was found. Expected collection.anki21b, collection.anki21, or collection.anki2.");
+  const {entry:collectionEntry,format}=selection;
+  const warnings=[...selection.warnings];
   const metaEntry=directory.find(entry=>entry.name==="meta");
   if(metaEntry&&metaEntry.uncompressedSize>1024*1024)throw new Error("The package metadata entry is unexpectedly large.");
   progress("Extracting package entries",36);
