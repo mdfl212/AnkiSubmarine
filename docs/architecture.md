@@ -6,7 +6,7 @@ Phase 1 baseline plus Phase 2 import implementation. Format support remains prov
 ## Product boundary
 AnkiSubmarine is an independent browser-first application. It shares no runtime code or services with PDF Toolkit, StudyMats, or NotebookTrans.
 
-## Stack
+## Offline application model\n- The production Vite build emits a same-origin service worker with a generated precache list of all emitted assets, including code-split chunks, worker bundles, styles, and WebAssembly files.\n- The service worker caches the app shell during installation, serves cached static assets, and falls back to the cached index document for offline navigation.\n- The service worker only intercepts same-origin GET requests; it does not act as a proxy or send application data to a backend.\n- The first successful load of a hosted deployment requires connectivity. Once its shell is cached, reopening from the same browser profile and origin works offline, subject to browser storage policies.\n- Service workers require localhost or HTTPS; opening a built HTML file directly through `file://` is not a supported offline launch method.\n- No cloud processing, external AI provider, or backend service is part of the application architecture.\n\n## Stack
 - React 19 + TypeScript for UI and domain contracts.
 - Vite 7 for build and development.
 - Vitest for unit tests.
