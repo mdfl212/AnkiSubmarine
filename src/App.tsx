@@ -17,7 +17,7 @@ function App(){
     <section className="workspace-panel" aria-labelledby="workflow-title">
       <div className="panel-heading"><div><div className="section-kicker">THE WORKFLOW</div><h2 id="workflow-title">From package to organized collection</h2></div><span className="phase-pill">PHASE 1 · FOUNDATION</span></div>
       <ol className="workflow-list">
-        {workflowSteps.map((step,index)=><li className={index===0?"workflow-step current":"workflow-step"} key={step.id}>
+        {workflowSteps.map((step,index)=><li className="workflow-step" key={step.id}>
           <span className="step-number">{String(index+1).padStart(2,"0")}</span><span className="step-label">{step.label}</span>
           {index<workflowSteps.length-1&&<span className="step-connector" aria-hidden="true"/>}
         </li>)}
