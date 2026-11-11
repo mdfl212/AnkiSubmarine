@@ -8,7 +8,7 @@ function findEndRecord(view:DataView):number{
   throw new Error("This file is not a valid ZIP archive (end record not found).");
 }
 export function inspectZipDirectory(bytes:Uint8Array,limits:ZipLimits=DEFAULT_ZIP_LIMITS):ZipEntryInfo[]{
-  if(bytes.byteLength<22)throw new Error("The selected file is too small to be an APKG archive.");
+  if(bytes.byteLength<22)throw new Error("This file is not a valid ZIP archive (file too small).");
   const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),end=findEndRecord(view);
   const disk=view.getUint16(end+4,true),centralDisk=view.getUint16(end+6,true);
   const entriesOnDisk=view.getUint16(end+8,true),entryCount=view.getUint16(end+10,true);
@@ -23,6 +23,7 @@ export function inspectZipDirectory(bytes:Uint8Array,limits:ZipLimits=DEFAULT_ZI
     if(offset+46>bytes.byteLength||view.getUint32(offset,true)!==CENTRAL)throw new Error("The ZIP central directory contains an invalid entry.");
     const flags=view.getUint16(offset+8,true),method=view.getUint16(offset+10,true);
     const compressedSize=view.getUint32(offset+20,true),uncompressedSize=view.getUint32(offset+24,true);
+    if(compressedSize===0xffffffff||uncompressedSize===0xffffffff)throw new Error("ZIP64 entry sizes are not supported by this import build yet.");
     const nameLength=view.getUint16(offset+28,true),extraLength=view.getUint16(offset+30,true),commentLength=view.getUint16(offset+32,true);
     const next=offset+46+nameLength+extraLength+commentLength;
     if(next>bytes.byteLength)throw new Error("The ZIP central directory entry is truncated.");
