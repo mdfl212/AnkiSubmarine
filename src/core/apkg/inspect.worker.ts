@@ -4,7 +4,7 @@ import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 import {readModernMediaManifest,readPackageVersion} from "./protobuf";
 import {inspectCollectionDatabase} from "./collection-inspector";
 import {inspectZipDirectory} from "./zip-preflight";
-import type {ApkgInspectionSummary,DeckSummary,ImportWorkerMessage,ImportWorkerRequest,PackageFormat} from "./types";
+import type {ApkgInspectionSummary,ImportWorkerMessage,ImportWorkerRequest,PackageFormat} from "./types";
 const scope=self as unknown as {onmessage:((event:MessageEvent<ImportWorkerRequest>)=>void)|null;postMessage:(message:ImportWorkerMessage)=>void};
 const MAX_UPLOAD_BYTES=350_000_000;
 const SQLITE_MAGIC="SQLite format 3\0";
