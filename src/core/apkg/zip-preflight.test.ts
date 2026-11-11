@@ -5,8 +5,8 @@ describe("ZIP preflight",()=>{
   it("lists normal package entries and their sizes",()=>{
     const bytes=zipSync({"collection.anki2":strToU8("sqlite"),media:strToU8("{}"),"0":strToU8("image")});
     const entries=inspectZipDirectory(bytes);
-    expect(entries.map(entry=>entry.name)).toEqual(["collection.anki2","media","0"]);
-    expect(entries[0]?.uncompressedSize).toBe(6);
+    expect(entries.map(entry=>entry.name)).toEqual(["0","collection.anki2","media"]);
+    expect(entries.find(entry=>entry.name==="collection.anki2")?.uncompressedSize).toBe(6);
   });
   it("rejects a non-ZIP input",()=>expect(()=>inspectZipDirectory(strToU8("not a zip"))).toThrow(/valid ZIP/));
   it("rejects unsafe archive paths",()=>{
