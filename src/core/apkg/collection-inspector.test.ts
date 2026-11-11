@@ -1,4 +1,4 @@
-import {afterAll,beforeAll,describe,expect,it} from "vitest";
+import {beforeAll,describe,expect,it} from "vitest";
 import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 import {inspectCollectionDatabase} from "./collection-inspector";
 let sqlite3:any;
