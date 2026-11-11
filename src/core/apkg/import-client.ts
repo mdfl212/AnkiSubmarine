@@ -1,7 +1,9 @@
+import InspectWorker from "./inspect.worker?worker&inline";
 import type {ApkgInspectionSummary,ImportWorkerMessage} from "./types";
+
 export function inspectApkg(file:File,onProgress:(stage:string,percent:number)=>void):Promise<ApkgInspectionSummary>{
   return new Promise((resolve,reject)=>{
-    const worker=new Worker(new URL("./inspect.worker.ts",import.meta.url),{type:"module"});let settled=false;
+    const worker=new InspectWorker();let settled=false;
     const finish=()=>{if(!settled){settled=true;worker.terminate();}};
     worker.onmessage=(event:MessageEvent<ImportWorkerMessage>)=>{
       const message=event.data;
