@@ -1,5 +1,5 @@
 import {describe,expect,it} from "vitest";
-import type {OutputBundle} from "vite";
+import type {OutputBundle} from "rollup";
 import {inlineStandaloneHtml} from "./standalone-html-plugin";
 
 function bundle():OutputBundle{
