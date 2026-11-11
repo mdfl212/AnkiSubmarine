@@ -11,7 +11,7 @@ AnkiSubmarine is an independent, browser-first application that inspects existin
 
 The application now has a local APKG selection/drop workflow, ZIP preflight checks, package collection-entry detection, legacy JSON and modern protobuf media-manifest readers, Zstandard decoding for modern collection databases, SQLite Wasm collection inspection, and an import summary.
 
-This is an initial inspector, not yet a complete APKG compatibility claim. ZIP64 and encrypted archives are not supported. The first build applies a 350 MB uploaded-file limit and 750 MB declared expanded-archive limit. Real package fixtures from supported Anki releases and end-to-end validation are still required before claiming format compatibility.
+The initial inspector passes CI type-checking, 11 unit tests (including SQLite inventory tests for normalized and legacy JSON schemas), and a production build. CI also checks for high/critical production dependency vulnerabilities. This is not yet a complete APKG compatibility claim. ZIP64 and encrypted archives are not supported. The first build applies a 350 MB uploaded-file limit and 750 MB declared expanded-archive limit. Real package fixtures from supported Anki releases and end-to-end validation are still required before claiming format compatibility.
 
 ## Development
 Requirements: Node.js 22.12+ and npm.

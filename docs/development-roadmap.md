@@ -9,7 +9,7 @@
 - [ ] Confirm build, type-check, tests, and responsive rendering in the user's environment.
 
 ## Phase 2 — APKG import engine
-**Status:** Initial implementation committed; real-fixture verification pending.
+**Status:** Initial implementation committed; TypeScript checks, 11 unit tests, production build, and high/critical production dependency audit pass in CI. Real-fixture verification remains pending.
 - [x] Add local .apkg file selection and drag-and-drop.
 - [x] Add ZIP central-directory preflight, archive path checks, encryption and compression checks, and resource limits.
 - [x] Detect collection entry formats, preferring collection.anki21b over compatibility copies.
@@ -17,7 +17,9 @@
 - [x] Add Zstandard collection decompression path.
 - [x] Add SQLite Wasm read-only inspection in a Web Worker.
 - [x] Report card/note/deck/note-type/tag/media counts, schema details, tables, and quick_check status where available.
-- [ ] Verify browser build and automated tests.
+- [x] Verify TypeScript checks, automated tests, and production build in GitHub Actions.
+- [x] Add synthetic SQLite inventory tests for normalized and legacy JSON collection schemas.
+- [x] Add a CI audit gate for high/critical production dependency vulnerabilities.
 - [ ] Test real .anki2, .anki21, and .anki21b APKG fixtures from supported Anki versions.
 - [ ] Benchmark large archives and revise memory limits/streaming behavior.
 - [ ] Verify media-index consistency and inspect real schema variants.
