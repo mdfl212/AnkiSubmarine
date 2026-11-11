@@ -1,27 +1,36 @@
 # AnkiSubmarine Architecture
 
 ## Status
-Phase 1 baseline plus Phase 2 import implementation. Format support remains provisional until real fixture tests pass.
+Phase 1 baseline plus Phase 2 import implementation. Format support remains provisional until real fixture tests pass. A standalone single-file production build is now the intended launch target; browser-level file launch validation remains outstanding.
 
 ## Product boundary
-AnkiSubmarine is an independent, fully offline-capable browser application. It shares no runtime code or services with PDF Toolkit, StudyMats, or NotebookTrans.
+AnkiSubmarine is an independent, offline-first application. It shares no runtime code or services with PDF Toolkit, StudyMats, or NotebookTrans.
 
 ## Offline application model
-- The production Vite build emits a same-origin service worker with a generated precache list of all emitted assets, including code-split chunks, worker bundles, styles, and WebAssembly files.
-- The service worker caches the app shell during installation, serves cached static assets, and falls back to the cached index document for offline navigation.
-- The service worker only intercepts same-origin GET requests; it does not act as a proxy or send application data to a backend.
-- The first successful load of a hosted deployment requires connectivity. Once its shell is cached, reopening from the same browser profile and origin works offline, subject to browser storage policies.
-- Service workers require localhost or HTTPS; opening a built HTML file directly through `file://` is not a supported offline launch method.
-- No cloud processing, external AI provider, or backend service is part of the application architecture.
+- The production entry point is a self-contained dist/index.html intended to be opened directly from local storage.
+- The standalone build inlines the application JavaScript, CSS, worker code, and binary assets. It must not require a remote server, backend, CDN, cloud processing, external AI provider, or first-online-visit cache.
+- APKG import, analysis, organization, editing, validation, and export must remain on-device.
+- The APKG inspection worker is bundled inline so the local launch path does not fetch a separate worker script.
+- The SQLite WebAssembly runtime and its binary payload must be bundled into the standalone output.
+- A service worker remains an optional fallback for a controlled HTTP(S) origin; it is not required for the standalone file launch path. Service workers cannot be registered from file://.
+- CI checks that the built HTML has no remaining external references to generated JavaScript or CSS assets. Actual browser launch, worker startup, and WASM initialization from file:// still require verification in target browsers.
 
 ## Stack
 - React 19 + TypeScript for UI and domain contracts.
-- Vite 7 for build and development.
+- Vite 7 for build and development. Its dev server is for development only, not a runtime requirement.
 - Vitest for unit tests.
 - fflate for ZIP decompression and archive inspection.
 - fzstd for the current pure-JavaScript Zstandard decode path. Its documented back-reference limitation means very large/high-compression archives need fixture validation and likely a more capable streaming decoder before broad support is claimed.
 - @sqlite.org/sqlite-wasm for SQLite in-memory inspection. The collection is deserialized into an in-memory database in a dedicated worker and switched to query-only mode.
-- Web Workers keep archive/database work off the UI thread.
+- Web Workers keep archive/database work off the UI thread; the production worker is bundled inline for standalone launch.
+
+## Standalone build pipeline
+1. Vite builds the React application and the APKG worker.
+2. The APKG worker is bundled inline rather than emitted as a separately fetched runtime script.
+3. Binary assets, including the SQLite WASM payload, are configured for inlining.
+4. The standalone HTML plugin embeds the generated JavaScript and CSS into index.html.
+5. The plugin fails the build if the HTML still references an external generated JavaScript or CSS asset, or if the main JavaScript chunk has unresolved chunk dependencies.
+6. The resulting dist/index.html is the intended user-facing offline artifact.
 
 ## Phase 2 package inspection pipeline
 1. Check filename, uploaded byte size, and ZIP end/central-directory records.
@@ -40,7 +49,8 @@ AnkiSubmarine is an independent, fully offline-capable browser application. It s
 - Modern protobuf parsing is intentionally narrow: package version and media index only.
 - Zstandard decompression library needs testing with real Anki-produced payloads and large files.
 - SQLite schema discovery is runtime-based, but count extraction is not yet a complete mapping of all Anki schema generations.
-- Real fixtures and Anki import checks are still mandatory before compatibility claims.
+- The standalone HTML build has automated asset-inlining checks, but direct local launch and file-origin worker/WASM behavior still need real-browser validation.
+- Real APKG fixtures and Anki import checks are mandatory before compatibility claims.
 
 ## Data integrity
 No collection writes are performed. SQLite is query-only and in-memory. The original uploaded File remains unchanged. No deck content is sent to a server or external AI provider. All import, analysis, organization, editing, and export features must remain local; any future feature that would require a remote service is out of scope unless the user explicitly changes this requirement.
